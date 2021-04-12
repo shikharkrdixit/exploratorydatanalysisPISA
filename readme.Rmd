@@ -1,0 +1,266 @@
+---
+title: "EDA"
+author: "Shikhar"
+output: 
+       html_document:
+         keep_md: true
+---
+## Performing Exploratory Data Analysis
+This is an EDA performed on the dataset **Pisa Scores 2013-2015.csv** which if you want you can download from [here](https://www.kaggle.com/zazueta/pisa-scores-2015/download) .
+
+
+PISA stands for "Program for International Student Assessment" and it is applied to 15 year-old students across the world to assess their performance in Math, Reading and Science. Here, I have tried to analyze and explore the dataset and resultantly infer some meaningful insights from it.
+
+The libraries I used in this process are:
+
+1. **tidyverse** cleaning of the datase and performing some transitions.
+2. **ggplot2** for plotting.
+3. **corrplot** for the correlation plot.
+4. **Hmisc** for cor and rcorr functions to find correlation and finding the P-values.
+5. **ggmap** for retrieving map tiles from online servies.
+
+
+Setting up the Working Dir. and calling the libraries.
+```{r,message=FALSE,warning=FALSE}
+setwd("D:/R/Visualization TDS")
+library(tidyverse)
+library(ggmap)
+library(ggplot2)
+library(Hmisc)
+library(corrplot)
+```
+
+### Data Loading.
+Loading the dataset from the system analyzing it's structure and the number of rows and columns present in the dataset.
+
+```{r}
+data <- read.csv(file = "Pisa mean perfromance scores 2013 - 2015 Data.csv",encoding = "UTF-8-BOM",na.string='..')
+str(data)
+ncol(data)
+nrow(data)
+```
+
+### Data Pre-processing.
+First we will choose those columns which are helpuful for us. For e.g., the 2013[YR2013] and 2014[YR2014] are NAs so we will not choose them and similarly some other columns.
+We chose Country Names(column1), Series Code(column4) and 2015[YR2015] marks(column7).
+
+We use the unique row values from Series.Code column of the dataset as the Column Names for the new DataSet(dataf) which we rename for better readability and removed the NA values. This was done using pipes method.
+
+
+```{r}
+dataf <- data[1:1161,c(1,4,7)] %>%
+  pivot_wider(names_from = Series.Code,values_from = X2015..YR2015.) %>%
+  rename(CountryName=ï..Country.Name,Maths=LO.PISA.MAT,MathsF=LO.PISA.MAT.FE,MathsM=LO.PISA.MAT.MA,Reading=LO.PISA.REA,ReadingF=LO.PISA.REA.FE,ReadingM=LO.PISA.REA.MA,Science=LO.PISA.SCI,ScienceF=LO.PISA.SCI.FE,ScienceM=LO.PISA.SCI.MA)%>%
+  drop_na() 
+head(dataf)
+```
+_A view of the newly formed dataset._
+
+
+### Visualization
+
+Since, in the dataset there are several Countries present, plotting all of them Graphically in the World map.
+
+```{r,message=FALSE,warning=FALSE,fig.width=11.916666667,fig.height=5.97916666667}
+wrldmap <- map_data("world") 
+mrgddata <- merge(wrldmap,dataf,by.x="region",by.y="CountryName")
+mrgddata <- mrgddata[order(mrgddata$group,mrgddata$order),]
+head(mrgddata)
+ggplot(mrgddata) +
+  aes(x=long,y=lat,group=group) + geom_polygon() + aes(fill=region) +
+  theme_dark()
+```
+
+
+
+Visualizing the Math Score Data with the Country Names.
+
+```{r,fig.height=8}
+ggplot(dataf) +
+  aes(x=reorder(CountryName,Maths),y=Maths) +
+  geom_bar(stat = 'identity') +
+  aes(fill=Maths) +
+  coord_flip() +
+  scale_fill_gradient(name="Score Level") +
+  geom_hline(yintercept = mean(dataf$Maths)) +
+  theme_grey() +
+  labs(x="Country Name",y="Math Score",title = "Graph Relation b/w Math & Countries") +
+  geom_hline(yintercept = mean(dataf$Maths),size=1,col="salmon3")
+```
+
+
+
+
+Visualizing the Science Score Data with the Country Names.
+
+```{r,fig.height=8}
+ggplot(dataf) +
+  aes(x=reorder(CountryName,Science),y=Science) +
+  geom_bar(stat='identity') +
+  aes(fill=Science) +
+  coord_flip() +
+  scale_fill_gradient("Score Level") +
+  labs(x="Country Name",y="Science Score",title="Graph Relation b/w Science & Countries") +
+  theme_bw() +
+  geom_hline(yintercept = mean(dataf$Science),size=1,col="sienna3")
+```
+
+
+
+
+Visualizing the Reading Data with the Country Names.
+
+```{r,fig.height=8}
+ggplot(dataf) +
+  aes(x=reorder(CountryName,Reading),Reading) +
+  geom_bar(stat = 'identity') +
+  aes(fill=Reading) +
+  coord_flip() +
+  scale_fill_gradient(name="Score Level") +
+  theme_classic() +
+  labs(x="Country Name",y="Reading Score",title="Graoh Relation b/w Reading & Countries") +
+  geom_hline(yintercept = mean(dataf$Reading),size=1,col="seashell4")
+```
+
+
+Subsetting data in a new dataframe according to gender and subject with only CountryName, SubjectGender and value as the column names.
+
+```{r}
+dataf2 <- dataf[,c(1,3,4,6,7,9,10)] %>%
+  pivot_longer(c(2,3,4,5,6,7),names_to = 'SubjectGender')
+```
+
+
+Now, Gender wise each subject marks Visualization in Box - plot form.
+
+```{r,fig.height=15}
+ggplot(dataf2)+
+  aes(x=SubjectGender,y=value)+
+  geom_point(pos="jitter",alpha=0.25) +
+  geom_boxplot(alpha=0.75) +
+  aes(fill=SubjectGender) +
+  scale_fill_manual(values = c("wheat4","tomato","wheat","violet","seashell3","salmon")) +
+  theme_linedraw() +
+  labs(x="Subject and Gender",y="Values/Scores")+
+  facet_wrap(.~SubjectGender,scales = "free_x",nrow=3,ncol=2)
+```
+
+
+The boxplots look similar due to the scales="free_x" argument in facet_wrap() function.
+
+Though it is early to judge but, the boxplots infer that the Gender Male performed better in Maths and Science but the womwn performed better in Reading.
+
+
+
+Now we plot the correlation graph.
+
+Subsetting relevant data and finding correlation between the Values by the Pearson Method.
+
+
+```{r}
+dataf3 <- dataf[,c(1,3,4,6,7,9,10)]
+res <- cor(dataf3[,-1])
+res
+```
+_Note : Pearson method measures the strength of linear relation ship b/w two variables. Value is always betweeen -1 and 1._
+
+p-Value for the corr. Lower the p-value more significant the correlation.
+```{r}
+rcorr(as.matrix(dataf3[,-1]))$P
+```
+
+
+
+Visualizing the correlation. Stronger the color and bigger the size, higher the correlation is. Thus, all the values are correlated.
+```{r}
+corrplot(res,order="hclust",type = "upper",tl.col = "black",tl.cex =0.5)
+```
+
+
+Creating another new sub-dataset from the present dataset to find the difference in the various subjects for each specific gender and all the countries separately.
+
+```{r}
+datafg <- mutate(dataf[,1],MathDiff = ((dataf$MathsF-dataf$MathsM)/dataf$MathsM)*100,
+                 ScienceDiff = (dataf$ScienceF-dataf$ScienceM)/dataf$ScienceM*100,
+                 ReadingDiff = (dataf$ReadingF-dataf$ReadingM)/dataf$ReadingM*100,
+                 Total=dataf$Maths+dataf$Science+dataf$Reading,
+                 AverageDiff=(MathDiff+ScienceDiff+ReadingDiff)/3)
+head(datafg)
+```
+_A view of the new dataset._
+
+Forming graphs with respect to the present differences in the dataset.
+
+Graph Representation of Maths Score Difference between Female and Male students.
+```{r,fig.height=10}
+ggplot(datafg)+
+  aes(x=reorder(CountryName,MathDiff),y=MathDiff)+
+  geom_bar(stat='identity') + aes(fill=MathDiff) +
+  scale_fill_gradient("Math Difference") +
+  geom_hline(yintercept = mean(datafg$MathDiff),size=1,col="brown") +
+  labs(x="Country Names",y="Math Score Diff %",title="Math Diff v/s Country") + coord_flip() +
+  theme_bw()
+```
+
+
+_From this plot it can be inferred that Men are better in Maths Subject in more countries._
+
+Graph Representation of Reading Score Difference between Female and Male students.
+```{r,fig.height=10}
+ggplot(datafg) +
+  aes(x=reorder(CountryName,ReadingDiff),y=ReadingDiff) +
+  geom_bar(stat='identity') + aes(fill=ReadingDiff) +
+  scale_fill_gradient("Reading Difference Palette") +
+  geom_hline(yintercept = mean(datafg$ReadingDiff),size=1,col="tan2") +
+  labs(x="Country Names",y="Reading Score Diff",title="Reading Diff v/s Country") +
+  coord_flip() +
+  theme_bw()
+```
+
+
+_We can infer that females were better at reading in almost every country._
+
+Graph Representation of Science Score Difference between Female and Male students.
+```{r,fig.height=10}
+ggplot(datafg) +
+  aes(x=reorder(CountryName,ScienceDiff),y=ScienceDiff) +
+  geom_bar(stat='identity') + aes(fill=ScienceDiff) +
+  scale_fill_gradient("Science Difference",) +
+  geom_hline(yintercept = mean(datafg$ScienceDiff),size=1,col="purple") +
+  labs(x="Country Names",y="Science Score Diff %",title="Science Diff v/s Country") +
+  coord_flip() +
+  theme_bw()
+```
+
+
+_Science also shows trend similar to Maths._
+
+
+So now we form a graph with the average difference values in all the countries in all three subjects.
+
+```{r,fig.height=10}
+ggplot(datafg)+
+  aes(x=reorder(CountryName,AverageDiff),y=AverageDiff) +
+  geom_bar(stat='identity') + aes(fill=AverageDiff) +
+  scale_fill_gradient("Average Diff") +
+  geom_hline(yintercept = mean(datafg$AverageDiff),size=1,col="tomato3") +
+  labs(x="Country Name",y="Average Diff",title="Average Diff v/s Country") + 
+  coord_flip() + theme_bw()
+```
+
+
+
+Final plot for showing the varying of Average Values with the total combined scores(maths + science + reading).
+```{r}
+ggplot(datafg) +
+  aes(x=AverageDiff,y=Total) +
+  geom_jitter() +
+  geom_smooth(fill="springgreen4",alpha=0.50,col="snow4") + theme_light() +
+  labs(x="Average Diff",y="Total",title="Average Diff v/s Total")
+```
+
+The difference between Male and Female candidates is very low i.e.; almost 0.
+
+
+**Made with ❤️ by [Shikhar](https://www.linkedin.com/in/shikharkrdixit/) .**
+
