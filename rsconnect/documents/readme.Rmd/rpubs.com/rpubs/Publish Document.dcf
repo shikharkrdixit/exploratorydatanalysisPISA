@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/753448/c2b1462ba7214276a57d406c7a185f2c
+bundleId: https://api.rpubs.com/api/v1/document/753448/c2b1462ba7214276a57d406c7a185f2c
+url: http://rpubs.com/shikharkrdixit/753448
+when: 1618258000.915
