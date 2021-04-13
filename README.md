@@ -14,11 +14,11 @@ The libraries I used in this process are:
 
 ## Process:
 
-[x] **Data Loading.**
+-[x] **Data Loading.**
 
-[x] **Data Pre-processing.**
+-[x] **Data Pre-processing.**
 
-[x] **Visualization.**
+-[x] **Visualization.**
 
 
 
