@@ -12,13 +12,13 @@ The libraries I used in this process are:
 4. **Hmisc** for cor and rcorr functions to find correlation and finding the P-values.
 5. **ggmap** for retrieving map tiles from online servies.
 
+## Process:
 
+[x] **Data Loading.**
 
-### Data Loading.
+[x] **Data Pre-processing.**
 
-### Data Pre-processing.
-
-### Visualization
+[x] **Visualization.**
 
 
 
